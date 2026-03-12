@@ -9,7 +9,7 @@ buildContext = "."
 
 [deploy]
 startCommand = "./bin/docker-entrypoint-api.sh"
-healthcheckPath = "/health/"
+healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
