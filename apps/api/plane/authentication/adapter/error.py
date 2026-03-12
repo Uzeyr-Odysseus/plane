@@ -69,6 +69,8 @@ AUTHENTICATION_ERROR_CODES = {
     "ADMIN_USER_DEACTIVATED": 5190,
     # Rate limit
     "RATE_LIMIT_EXCEEDED": 5900,
+    # Email domain whitelisting
+    "EMAIL_DOMAIN_NOT_ALLOWED": 5901,
     # Unknown
     "AUTHENTICATION_FAILED": 5999,
 }

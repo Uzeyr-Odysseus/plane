@@ -50,6 +50,40 @@ class ApiKeyRateThrottle(SimpleRateThrottle):
         return allowed
 
 
+class IPRateThrottle(SimpleRateThrottle):
+    """
+    Blanket per-IP rate limit applied to all endpoints regardless of auth status.
+    Prevents abuse from unauthenticated or scripted clients hitting the API at high volume.
+    Default: 100 requests/minute per IP. Configurable via IP_RATE_LIMIT env var.
+    Respects X-Forwarded-For so Railway's load balancer doesn't collapse all clients to one IP.
+    """
+
+    scope = "ip"
+    rate = os.environ.get("IP_RATE_LIMIT", "100/minute")
+
+    def get_cache_key(self, request, view):
+        # Prefer the original client IP from the forwarded header (set by proxy/load balancer)
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if x_forwarded_for:
+            # First entry in the chain is the original client IP
+            ip = x_forwarded_for.split(",")[0].strip()
+        else:
+            ip = request.META.get("REMOTE_ADDR", "unknown")
+        return f"{self.scope}:{ip}"
+
+    def allow_request(self, request, view):
+        allowed = super().allow_request(request, view)
+        if allowed:
+            now = self.timer()
+            history = self.cache.get(self.key, [])
+            while history and history[-1] <= now - self.duration:
+                history.pop()
+            available = self.num_requests - len(history)
+            request.META["X-RateLimit-Remaining"] = max(0, available)
+            request.META["X-RateLimit-Reset"] = int(now + self.duration)
+        return allowed
+
+
 class ServiceTokenRateThrottle(SimpleRateThrottle):
     scope = "service_token"
     rate = "300/minute"

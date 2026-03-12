@@ -82,6 +82,8 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": ("rest_framework.throttling.AnonRateThrottle",),
     "DEFAULT_THROTTLE_RATES": {
         "anon": "30/minute",
+        "user": "300/minute",    # Per-user limit for authenticated session requests
+        "ip": "100/minute",      # Per-IP blanket limit for all requests (see IPRateThrottle)
         "asset_id": "5/minute",
     },
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),

@@ -1,0 +1,10 @@
+# Railway service config for the main web frontend (React Router + Nginx)
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/web/Dockerfile.web"
+buildContext = "."
+
+[deploy]
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

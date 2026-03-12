@@ -28,6 +28,7 @@ from plane.authentication.adapter.error import (
 )
 from plane.authentication.rate_limit import AuthenticationThrottle
 from plane.utils.path_validator import get_safe_redirect_url
+from plane.authentication.utils.email_domain import is_email_domain_allowed
 
 
 class MagicGenerateEndpoint(APIView):
@@ -148,6 +149,21 @@ class MagicSignUpEndpoint(View):
                 params=params,
             )
             return HttpResponseRedirect(url)
+        # Reject signup if the email domain is not on the org whitelist
+        if not is_email_domain_allowed(email):
+            exc = AuthenticationException(
+                error_code=AUTHENTICATION_ERROR_CODES["EMAIL_DOMAIN_NOT_ALLOWED"],
+                error_message="EMAIL_DOMAIN_NOT_ALLOWED",
+                payload={"email": email},
+            )
+            params = exc.get_error_dict()
+            url = get_safe_redirect_url(
+                base_url=base_host(request=request, is_app=True),
+                next_path=next_path,
+                params=params,
+            )
+            return HttpResponseRedirect(url)
+
         # Existing user
         existing_user = User.objects.filter(email=email).first()
         if existing_user:

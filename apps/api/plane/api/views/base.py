@@ -24,7 +24,9 @@ from rest_framework.generics import GenericAPIView
 # Module imports
 from plane.db.models.api import APIToken
 from plane.api.middleware.api_authentication import APIKeyAuthentication
-from plane.api.rate_limit import ApiKeyRateThrottle, ServiceTokenRateThrottle
+from rest_framework.throttling import UserRateThrottle
+
+from plane.api.rate_limit import ApiKeyRateThrottle, IPRateThrottle, ServiceTokenRateThrottle
 from plane.utils.exception_logger import log_exception
 from plane.utils.paginator import BasePaginator
 from plane.utils.core.mixins import ReadReplicaControlMixin
@@ -61,16 +63,22 @@ class BaseAPIView(TimezoneMixin, GenericAPIView, ReadReplicaControlMixin, BasePa
 
     def get_throttles(self):
         throttle_classes = []
+
+        # IPRateThrottle always runs first — blanket per-IP limit regardless of auth method
+        throttle_classes.append(IPRateThrottle())
+
         api_key = self.request.headers.get("X-Api-Key")
 
         if api_key:
+            # Service tokens get a higher limit; regular API keys get the standard limit
             service_token = APIToken.objects.filter(token=api_key, is_service=True).first()
-
             if service_token:
                 throttle_classes.append(ServiceTokenRateThrottle())
                 return throttle_classes
-
-        throttle_classes.append(ApiKeyRateThrottle())
+            throttle_classes.append(ApiKeyRateThrottle())
+        else:
+            # Session-authenticated users get a per-user limit (300/minute)
+            throttle_classes.append(UserRateThrottle())
 
         return throttle_classes
 

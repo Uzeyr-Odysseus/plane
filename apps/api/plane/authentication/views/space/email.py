@@ -20,6 +20,7 @@ from plane.authentication.adapter.error import (
     AuthenticationException,
 )
 from plane.utils.path_validator import get_safe_redirect_url, validate_next_path, get_allowed_hosts
+from plane.authentication.utils.email_domain import is_email_domain_allowed
 
 
 class SignInAuthSpaceEndpoint(View):
@@ -148,6 +149,19 @@ class SignUpAuthSpaceEndpoint(View):
             exc = AuthenticationException(
                 error_code=AUTHENTICATION_ERROR_CODES["INVALID_EMAIL_SIGN_UP"],
                 error_message="INVALID_EMAIL_SIGN_UP",
+                payload={"email": str(email)},
+            )
+            params = exc.get_error_dict()
+            url = get_safe_redirect_url(
+                base_url=base_host(request=request, is_space=True), next_path=next_path, params=params
+            )
+            return HttpResponseRedirect(url)
+
+        # Reject signup if the email domain is not on the org whitelist
+        if not is_email_domain_allowed(email):
+            exc = AuthenticationException(
+                error_code=AUTHENTICATION_ERROR_CODES["EMAIL_DOMAIN_NOT_ALLOWED"],
+                error_message="EMAIL_DOMAIN_NOT_ALLOWED",
                 payload={"email": str(email)},
             )
             params = exc.get_error_dict()

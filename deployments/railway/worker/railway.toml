@@ -1,0 +1,13 @@
+# Railway service config for the Celery worker (async task processor)
+# Uses the same Docker image as the API — only the start command differs.
+# In Railway UI: Add Service → GitHub Repo → set Root Directory to repo root
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/api/Dockerfile.api"
+buildContext = "."
+
+[deploy]
+startCommand = "./bin/docker-entrypoint-worker.sh"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
