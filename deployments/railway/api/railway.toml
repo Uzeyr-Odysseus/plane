@@ -5,7 +5,7 @@
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "apps/api/Dockerfile.api"
-buildContext = "apps/api"
+buildContext = "."
 
 [deploy]
 startCommand = "./bin/docker-entrypoint-api.sh"
