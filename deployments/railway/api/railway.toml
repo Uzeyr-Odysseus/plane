@@ -8,7 +8,7 @@ dockerfilePath = "apps/api/Dockerfile.api"
 buildContext = "."
 
 [deploy]
-startCommand = "./bin/docker-entrypoint-api.sh"
+startCommand = "/code/bin/docker-entrypoint-api.sh"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
